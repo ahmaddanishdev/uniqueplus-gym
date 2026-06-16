@@ -3,25 +3,27 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User; // <--- DON'T FORGET THIS
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class MembershipController extends Controller
 {
-   public function verify($id)
-{
-    // Find user by their membership string (PNP-00016)
-    $user = User::where('membership_id', $id)->firstOrFail();
+    public function verifyMembership($id)
+    {
+        $user = User::findOrFail($id); // ✅ cari by primary key
 
-    // ONLY now do we set the status and the expiry date
-    $user->update([
-        'is_active' => true,
-        'status' => 'active',
-        'membership_expiry' => now()->addDays(30), // Expiry is set ONLY upon scan
-    ]);
+        $status = $user->is_active ? 'ACTIVE' : 'NOT ACTIVE';
+        $color  = $user->is_active ? '#27ae60' : '#e74c3c';
 
-    return "Verification Successful! " . $user->name . " is now active.";
-}
-
-    // ... your other methods like renew()
+        return "
+            <div style='font-family:sans-serif; text-align:center; padding:40px;'>
+                <h2>Membership Verification</h2>
+                <p><strong>Name:</strong> {$user->name}</p>
+                <p><strong>ID:</strong> PNP-" . str_pad($user->id, 5, '0', STR_PAD_LEFT) . "</p>
+                <p style='background:{$color}; color:white; padding:10px 20px; border-radius:20px; display:inline-block; font-weight:bold;'>
+                    STATUS: {$status}
+                </p>
+            </div>
+        ";
+    }
 }
